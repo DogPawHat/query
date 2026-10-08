@@ -98,6 +98,10 @@ export function createBaseQuery<
       return unsubscribe
     },
   )
+  // ...and since `watchChanges` only returns a cleanup from its second run, give the eager subscription
+  // its own teardown for non-component contexts such as a disposed `$effect.root`
+  // (pre effects run synchronously on creation, so this is registered immediately)...
+  $effect.pre(() => () => unsubscribe())
   // ...and finally also cleanup via onDestroy because that one runs on the server whereas $effect.pre does not.
   // (in a try-catch because it theoretically can be called in a non-component context - that should not happen
   // but it would be a breaking change technically to error out here. SSR-safe because this wouldn't be called during SSR if it was not in a component)
